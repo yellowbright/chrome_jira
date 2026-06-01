@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Commit Collector - History</title>
+  <link rel="stylesheet" href="css/popup.css" />
+  <link rel="stylesheet" href="css/history.css" />
+</head>
+<body class="history-page">
+  <header>
+    <h1>All Collected Commits</h1>
+    <div class="actions">
+      <button id="copyAll" class="primary" title="Copy everything">Copy All</button>
+      <button id="clearAll" class="danger" title="Clear all">Clear All</button>
+    </div>
+  </header>
+
+  <main id="content">
+    <p class="empty">No commits collected yet.</p>
+  </main>
+
+  <textarea id="rawClipboard" readonly aria-hidden="true"></textarea>
+
+  <script src="js/shared.js"></script>
+  <script src="js/history.js"></script>
+</body>
+</html>

@@ -1,0 +1,48 @@
+{
+  "manifest_version": 3,
+  "name": "JIRA Commit Collector",
+  "short_name": "Commit Collector",
+  "description": "Right-click a JIRA case to copy its GIT commit message and collect it into a local weekly clipboard.",
+  "version": "1.0.0",
+
+  "action": {
+    "default_title": "Commit Collector",
+    "default_popup": "popup.html",
+    "default_icon": {
+      "16": "img/icon-16.png",
+      "48": "img/icon-48.png",
+      "128": "img/icon-128.png"
+    }
+  },
+
+  "icons": {
+    "16": "img/icon-16.png",
+    "48": "img/icon-48.png",
+    "128": "img/icon-128.png"
+  },
+
+  "permissions": [
+    "contextMenus",
+    "activeTab",
+    "tabs",
+    "scripting",
+    "storage",
+    "notifications"
+  ],
+
+  "host_permissions": [
+    "*://*.atlassian.net/*"
+  ],
+
+  "content_scripts": [
+    {
+      "run_at": "document_end",
+      "matches": ["*://*.atlassian.net/browse/*"],
+      "js": ["js/content.js"]
+    }
+  ],
+
+  "background": {
+    "service_worker": "js/background.js"
+  }
+}

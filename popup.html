@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Commit Collector</title>
+  <link rel="stylesheet" href="css/popup.css" />
+</head>
+<body>
+  <header>
+    <h1>This Week</h1>
+    <div class="actions">
+      <button id="copyAll" class="primary" title="Copy this week">Copy Week</button>
+      <button id="clearAll" class="danger" title="Clear this week">Clear</button>
+    </div>
+  </header>
+
+  <main id="content">
+    <p class="empty">No commits collected this week yet.</p>
+  </main>
+
+  <footer class="footer">
+    <button id="viewHistory" class="link-btn">View all history →</button>
+  </footer>
+
+  <textarea id="rawClipboard" readonly aria-hidden="true"></textarea>
+
+  <script src="js/shared.js"></script>
+  <script src="js/popup.js"></script>
+</body>
+</html>
