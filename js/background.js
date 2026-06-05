@@ -62,8 +62,16 @@ function getWeekStartKey(date) {
   return `${y}-${m}-${dd}`;
 }
 
+// Match shared.js formatLinePlain: "[KEY] title"
+function formatCommitLine(caseKey, commit) {
+  const re = new RegExp('^\\s*\\[?' + caseKey.replace('-', '\\-') + '\\]?\\s*');
+  const title = commit.replace(re, '').trim();
+  return `[${caseKey}] ${title}`;
+}
+
 function handleCollect(caseObj, tabId) {
   const weekKey = getWeekStartKey(new Date());
+  const line = formatCommitLine(caseObj.caseKey, caseObj.gitCommitString);
 
   chrome.storage.local.get({ [STORAGE_KEY]: {} }, (res) => {
     const data = res[STORAGE_KEY] || {};
@@ -71,7 +79,7 @@ function handleCollect(caseObj, tabId) {
 
     const exists = week.some((item) => item.caseKey === caseObj.caseKey);
     if (exists) {
-      copyToClipboard(tabId, caseObj.gitCommitString);
+      copyToClipboard(tabId, line);
       notify('Already added', `${caseObj.caseKey} is already in this week's list. Copied to clipboard.`);
       return;
     }
@@ -85,8 +93,8 @@ function handleCollect(caseObj, tabId) {
     data[weekKey] = week;
 
     chrome.storage.local.set({ [STORAGE_KEY]: data }, () => {
-      copyToClipboard(tabId, caseObj.gitCommitString);
-      notify('Collected', caseObj.gitCommitString);
+      copyToClipboard(tabId, line);
+      notify('Collected', line);
     });
   });
 }
