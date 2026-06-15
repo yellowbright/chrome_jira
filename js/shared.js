@@ -1,5 +1,5 @@
 const STORAGE_KEY = 'weeklyCommits';
-const DONE_STATUSES = ['closed', 'fixed master', 'fixed live', 'verified fixed master', 'verified fixed feature', 'Done'];
+const DONE_STATUSES = ['closed', 'fixed master', 'fixed live', 'verified fixed master', 'verified fixed feature', 'done'];
 
 const statusCache = new Map();
 
