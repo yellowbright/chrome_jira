@@ -14,3 +14,21 @@ body.history-page main {
 body.history-page header {
   padding: 16px 24px;
 }
+
+.week-header-info {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.week-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.week-header-actions button {
+  font-size: 11px;
+  padding: 3px 8px;
+}
