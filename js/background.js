@@ -1,4 +1,5 @@
 const MENU_ID = 'COLLECT_COMMIT';
+const AGENT_MENU_ID = 'COLLECT_AGENT_MESSAGE';
 const STORAGE_KEY = 'weeklyCommits';
 
 const URL_PATTERNS = ['*://*.atlassian.net/browse/*'];
@@ -14,16 +15,26 @@ function createMenu() {
       contexts: ['all'],
       documentUrlPatterns: URL_PATTERNS
     });
+    chrome.contextMenus.create({
+      id: AGENT_MENU_ID,
+      title: 'Collect cursor agent message',
+      contexts: ['all'],
+      documentUrlPatterns: URL_PATTERNS
+    });
   });
 }
 
 chrome.contextMenus.onClicked.addListener((info, tab) => {
-  if (info.menuItemId !== MENU_ID || !tab || !tab.id) return;
-  requestCaseData(tab.id, false);
+  if (!tab || !tab.id) return;
+  if (info.menuItemId === MENU_ID) {
+    sendToContent(tab.id, 'GET_CASE_DATA', false, (caseObj) => handleCollect(caseObj, tab.id));
+  } else if (info.menuItemId === AGENT_MENU_ID) {
+    sendToContent(tab.id, 'GET_AGENT_MESSAGE', false, (data) => handleAgentMessage(data, tab.id));
+  }
 });
 
-function requestCaseData(tabId, isRetry) {
-  chrome.tabs.sendMessage(tabId, { request: 'GET_CASE_DATA' }, (caseObj) => {
+function sendToContent(tabId, request, isRetry, onData) {
+  chrome.tabs.sendMessage(tabId, { request }, (data) => {
     if (chrome.runtime.lastError) {
       // Content script not present yet (page opened before install / not injected).
       if (!isRetry) {
@@ -34,7 +45,7 @@ function requestCaseData(tabId, isRetry) {
               notify('Error', 'Cannot access this page. Open a JIRA case page and try again.');
               return;
             }
-            requestCaseData(tabId, true);
+            sendToContent(tabId, request, true, onData);
           }
         );
       } else {
@@ -42,12 +53,17 @@ function requestCaseData(tabId, isRetry) {
       }
       return;
     }
-    if (!caseObj) {
+    if (!data) {
       notify('Error', 'No case data found. Open a JIRA case (/browse/KEY) page.');
       return;
     }
-    handleCollect(caseObj, tabId);
+    onData(data);
   });
+}
+
+function handleAgentMessage(data, tabId) {
+  copyToClipboard(tabId, data.text);
+  notify('Copied', `${data.caseKey} agent message copied to clipboard.`);
 }
 
 // Monday as the first day of the week (ISO). Returns YYYY-MM-DD.

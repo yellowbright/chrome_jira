@@ -2,8 +2,8 @@
   "manifest_version": 3,
   "name": "JIRA Commit Collector",
   "short_name": "Commit Collector",
-  "description": "Right-click a JIRA case to copy its GIT commit message and collect it into a local weekly clipboard.",
-  "version": "1.0.0",
+  "description": "Right-click a JIRA case to copy its GIT commit message or a formatted cursor agent message into the clipboard.",
+  "version": "1.1.0",
 
   "action": {
     "default_title": "Commit Collector",
