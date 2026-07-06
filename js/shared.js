@@ -59,19 +59,24 @@ function originFor(item) {
 }
 
 async function fetchStatus(origin, caseKey) {
-  if (statusCache.has(caseKey)) return statusCache.get(caseKey);
+  if (statusCache.has(caseKey)) {
+    const cached = statusCache.get(caseKey);
+    if (cached !== null) return cached;
+  }
   try {
-    const resp = await fetch(`${origin}/rest/api/2/issue/${caseKey}?fields=status`, {
-      credentials: 'include',
-      headers: { Accept: 'application/json' }
+    const name = await chrome.runtime.sendMessage({
+      request: 'FETCH_STATUS',
+      origin,
+      caseKey
     });
-    if (!resp.ok) throw new Error('HTTP ' + resp.status);
-    const json = await resp.json();
-    const name = json && json.fields && json.fields.status ? json.fields.status.name : '';
+    if (name === null || name === undefined) {
+      statusCache.delete(caseKey);
+      return null;
+    }
     statusCache.set(caseKey, name);
     return name;
   } catch (e) {
-    statusCache.set(caseKey, null);
+    statusCache.delete(caseKey);
     return null;
   }
 }

@@ -171,6 +171,20 @@ async function getAgentMessage() {
   return { caseKey, text, url: location.origin + '/browse/' + caseKey };
 }
 
+async function fetchIssueStatus(caseKey) {
+  try {
+    const resp = await fetch(
+      `${location.origin}/rest/api/2/issue/${caseKey}?fields=status`,
+      { credentials: 'include', headers: { Accept: 'application/json' } }
+    );
+    if (!resp.ok) throw new Error('HTTP ' + resp.status);
+    const json = await resp.json();
+    return json && json.fields && json.fields.status ? json.fields.status.name : '';
+  } catch (e) {
+    return null;
+  }
+}
+
 chrome.runtime.onMessage.addListener(function (msg, sender, sendResponse) {
   if (msg && msg.request === 'GET_CASE_DATA') {
     sendResponse(getCaseData());
@@ -178,6 +192,10 @@ chrome.runtime.onMessage.addListener(function (msg, sender, sendResponse) {
   }
   if (msg && msg.request === 'GET_AGENT_MESSAGE') {
     getAgentMessage().then(sendResponse);
+    return true;
+  }
+  if (msg && msg.request === 'FETCH_STATUS') {
+    fetchIssueStatus(msg.caseKey).then(sendResponse);
     return true;
   }
   return true;

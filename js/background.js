@@ -146,4 +146,54 @@ function notify(title, message) {
   notificationTimeout = setTimeout(() => chrome.notifications.clear(id), 3000);
 }
 
+async function fetchIssueStatus(origin, caseKey) {
+  try {
+    const resp = await fetch(`${origin}/rest/api/2/issue/${caseKey}?fields=status`, {
+      headers: { Accept: 'application/json' }
+    });
+    if (!resp.ok) throw new Error('HTTP ' + resp.status);
+    const json = await resp.json();
+    return json && json.fields && json.fields.status ? json.fields.status.name : '';
+  } catch (e) {
+    return null;
+  }
+}
+
+async function fetchIssueStatusViaTab(origin, caseKey) {
+  const tabs = await chrome.tabs.query({ url: '*://*.atlassian.net/*' });
+  const tab = tabs.find((t) => t.url && t.url.startsWith(origin));
+  if (!tab || !tab.id) return null;
+
+  const ask = () =>
+    new Promise((resolve) => {
+      chrome.tabs.sendMessage(tab.id, { request: 'FETCH_STATUS', caseKey }, (resp) => {
+        if (chrome.runtime.lastError) resolve(null);
+        else resolve(resp);
+      });
+    });
+
+  let status = await ask();
+  if (status !== null) return status;
+
+  try {
+    await chrome.scripting.executeScript({ target: { tabId: tab.id }, files: ['js/content.js'] });
+  } catch (e) {
+    return null;
+  }
+  return ask();
+}
+
+async function fetchStatusWithFallback(origin, caseKey) {
+  const fromBg = await fetchIssueStatus(origin, caseKey);
+  if (fromBg !== null) return fromBg;
+  return fetchIssueStatusViaTab(origin, caseKey);
+}
+
+chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
+  if (msg && msg.request === 'FETCH_STATUS') {
+    fetchStatusWithFallback(msg.origin, msg.caseKey).then(sendResponse);
+    return true;
+  }
+});
+
 createMenu();
