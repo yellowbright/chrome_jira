@@ -1,5 +1,13 @@
 const STORAGE_KEY = 'weeklyCommits';
-const DONE_STATUSES = ['closed', 'fixed master', 'fixed live', 'verified fixed master', 'verified fixed feature', 'done'];
+const DONE_STATUSES = [
+  'closed',
+  'fixed master',
+  'fixed live',
+  'verified fixed master',
+  'verified fixed feature',
+  'verified fixed hotfix',
+  'done'
+];
 
 const statusCache = new Map();
 
@@ -45,9 +53,17 @@ function stripKey(commit, caseKey) {
   return commit.replace(re, '').trim();
 }
 
-function statusSuffix(statusName) {
+function statusSuffix(statusName, assigneeName) {
   const s = (statusName || '').trim().toLowerCase();
-  return DONE_STATUSES.includes(s) ? ' (Done)' : ' (In Progress - )';
+  if (DONE_STATUSES.includes(s)) return ' (Done)';
+
+  if (s === 'fixed case') {
+    const assignee = (assigneeName || '').trim();
+    if (assignee === 'Yanny Han') return ' (In Progress - In QA)';
+    if (assignee !== 'Lucas Huang') return ' (In Progress - In PM)';
+  }
+
+  return ' (In Progress - )';
 }
 
 function originFor(item) {
@@ -64,17 +80,17 @@ async function fetchStatus(origin, caseKey) {
     if (cached !== null) return cached;
   }
   try {
-    const name = await chrome.runtime.sendMessage({
+    const info = await chrome.runtime.sendMessage({
       request: 'FETCH_STATUS',
       origin,
       caseKey
     });
-    if (name === null || name === undefined) {
+    if (info === null || info === undefined) {
       statusCache.delete(caseKey);
       return null;
     }
-    statusCache.set(caseKey, name);
-    return name;
+    statusCache.set(caseKey, info);
+    return info;
   } catch (e) {
     statusCache.delete(caseKey);
     return null;
@@ -89,8 +105,8 @@ function formatLinePlain(item) {
 
 // Cookie/session invalid -> no status -> no suffix, but still copy the line.
 async function formatLine(item) {
-  const status = await fetchStatus(originFor(item), item.caseKey);
-  const suffix = status === null ? '' : statusSuffix(status);
+  const info = await fetchStatus(originFor(item), item.caseKey);
+  const suffix = info === null ? '' : statusSuffix(info.status, info.assignee);
   return `${formatLinePlain(item)}${suffix}`;
 }
 

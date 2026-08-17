@@ -174,12 +174,16 @@ async function getAgentMessage() {
 async function fetchIssueStatus(caseKey) {
   try {
     const resp = await fetch(
-      `${location.origin}/rest/api/2/issue/${caseKey}?fields=status`,
+      `${location.origin}/rest/api/2/issue/${caseKey}?fields=status,assignee`,
       { credentials: 'include', headers: { Accept: 'application/json' } }
     );
     if (!resp.ok) throw new Error('HTTP ' + resp.status);
     const json = await resp.json();
-    return json && json.fields && json.fields.status ? json.fields.status.name : '';
+    const fields = json && json.fields ? json.fields : {};
+    return {
+      status: fields.status && fields.status.name ? fields.status.name : '',
+      assignee: fields.assignee && fields.assignee.displayName ? fields.assignee.displayName : ''
+    };
   } catch (e) {
     return null;
   }

@@ -146,14 +146,21 @@ function notify(title, message) {
   notificationTimeout = setTimeout(() => chrome.notifications.clear(id), 3000);
 }
 
+function parseIssueStatusInfo(json) {
+  const fields = json && json.fields ? json.fields : {};
+  const status = fields.status && fields.status.name ? fields.status.name : '';
+  const assignee = fields.assignee && fields.assignee.displayName ? fields.assignee.displayName : '';
+  return { status, assignee };
+}
+
 async function fetchIssueStatus(origin, caseKey) {
   try {
-    const resp = await fetch(`${origin}/rest/api/2/issue/${caseKey}?fields=status`, {
+    const resp = await fetch(`${origin}/rest/api/2/issue/${caseKey}?fields=status,assignee`, {
       headers: { Accept: 'application/json' }
     });
     if (!resp.ok) throw new Error('HTTP ' + resp.status);
     const json = await resp.json();
-    return json && json.fields && json.fields.status ? json.fields.status.name : '';
+    return parseIssueStatusInfo(json);
   } catch (e) {
     return null;
   }
@@ -172,8 +179,8 @@ async function fetchIssueStatusViaTab(origin, caseKey) {
       });
     });
 
-  let status = await ask();
-  if (status !== null) return status;
+  let info = await ask();
+  if (info !== null) return info;
 
   try {
     await chrome.scripting.executeScript({ target: { tabId: tab.id }, files: ['js/content.js'] });
